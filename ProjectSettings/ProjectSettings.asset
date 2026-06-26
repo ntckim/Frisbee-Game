@@ -711,10 +711,10 @@ PlayerSettings:
   apiCompatibilityLevel: 6
   activeInputHandler: 0
   windowsGamepadBackendHint: 0
-  cloudProjectId: e1938ba7-b756-4553-9f1f-1633da276d02
+  cloudProjectId: aaf431b8-11ed-485a-9f52-5b033b7008b8
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: 2D-inclass-demo
+  projectName: Frisbee Game
   organizationId: ntckim
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0

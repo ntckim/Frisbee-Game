@@ -7,6 +7,7 @@ public class frisbee : MonoBehaviour
     [SerializeField] private float speed = 5f;
 
     private bool caught;
+    private bool playerTouching;
     private Vector3 nextPosition;
 
     void Start()
@@ -29,6 +30,11 @@ public class frisbee : MonoBehaviour
         {
             nextPosition = nextPosition == pointA.position ? pointB.position : pointA.position;
         }
+
+        if (playerTouching && Input.GetKeyDown(KeyCode.Space))
+        {
+            CatchFrisbee();
+        }
     }
 
     private void SetupCollider()
@@ -49,7 +55,22 @@ public class frisbee : MonoBehaviour
         if (caught) return;
         if (!collision.CompareTag("Player")) return;
 
+        playerTouching = true;
+    }
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (!collision.CompareTag("Player")) return;
+
+        playerTouching = false;
+    }
+
+    private void CatchFrisbee()
+    {
+        if (caught) return;
+
         caught = true;
+        playerTouching = false;
         gameObject.SetActive(false);
 
         if (gameManager.instance != null)

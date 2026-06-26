@@ -8,22 +8,15 @@ using UnityEngine.UIElements;
 public class playermovement : MonoBehaviour
 {
     public LayerMask groundLayer;
-    private enum AnimationState{idle, run, jump, fall, doublejump}
+    private enum AnimationState{idle, run, jump, fall}
     private BoxCollider2D box;
     private Rigidbody2D rb;
-    private int jumpCount = 0;
     private Animator Animator;
     private AnimationState currentState = AnimationState.idle;
     private SpriteRenderer SpriteRenderer;
     private bool jumpButtonDown = false;
     private PlatformEffector2D currentEffector;
     public bool canMove = false;
-    [Header("Dash")]
-        [SerializeField] private float dashSpeed = 20f;
-        [SerializeField] private float dashDuration = 0.2f;
-        [SerializeField] private float dashCooldown = 1f;//make dash cooldown not come up if still in the air
-        private bool isDashing = false;
-        private bool canDash = true;
     [Header("Movement")]
         [SerializeField]private float maxRunSpeed = 10f;
         [SerializeField] private float jumpHeight = 10f; 
@@ -41,23 +34,6 @@ public class playermovement : MonoBehaviour
     void Update()
     {
         if (!canMove) return;
-        if (Input.GetKeyDown(KeyCode.Space) && canDash){
-            StartCoroutine(Dash());
-            if(!OnGround()){
-                canDash = false;
-            }
-        }
-        if (!OnGround() && jumpCount == 0){
-            jumpCount = 1;
-        }
-        // SKIP all other movement if we are currently dashing
-        if (isDashing){
-            return; 
-        }
-        if (OnGround() && rb.velocity.y <= 0){
-            jumpCount = 0;
-            canDash = true;
-        }
         float xInput = 0;
 
         if (Input.GetKey(KeyCode.RightArrow)) {
@@ -77,9 +53,8 @@ public class playermovement : MonoBehaviour
         if (xInput != 0) SpriteRenderer.flipX = xInput < 0;
         //jumping      
         jumpButtonDown = Input.GetKeyDown(KeyCode.UpArrow);
-        if (jumpButtonDown && jumpCount < 2){
+        if (jumpButtonDown && OnGround()){
             rb.velocity = new Vector2(rb.velocity.x, jumpHeight);
-            jumpCount++;
         }
         if (Input.GetKeyDown(KeyCode.DownArrow)){
             rb.velocity = new Vector2(rb.velocity.x, -10);
@@ -117,49 +92,21 @@ public class playermovement : MonoBehaviour
             currentState = AnimationState.run;}
         else if (!OnGround() && Input.GetKey(KeyCode.DownArrow)){
             currentState = AnimationState.fall;}
-        else if (!OnGround() && jumpButtonDown && jumpCount < 3){
-            currentState = AnimationState.doublejump;}
-        else if (!OnGround() && (currentState==AnimationState.doublejump) && (rb.velocity.y>0)){
-            currentState = AnimationState.doublejump;}
-        else if (!OnGround() ){
+        else if (!OnGround() && rb.velocity.y > 0){
             currentState = AnimationState.jump;}
+        else if (!OnGround()){
+            currentState = AnimationState.fall;}
         else{
             currentState = AnimationState.idle;}
 
         if (currentState == AnimationState.run){
             Animator.CrossFade("run",0, 0);}
-        else if (currentState == AnimationState.doublejump){
-            Animator.CrossFade("doublejump",0, 0);}
         else if (currentState == AnimationState.fall){
             Animator.CrossFade("fall",0, 0);}
         else if (currentState == AnimationState.jump){
             Animator.CrossFade("jump",0, 0);}
         else if (currentState == AnimationState.idle){
             Animator.CrossFade("idle",0, 0);}
-    }
-    private IEnumerator Dash(){
-        canDash = false;
-        isDashing = true;
-        float x = Input.GetAxisRaw("Horizontal");
-        float y = Input.GetAxisRaw("Vertical");
-        Vector2 dashDirection = new Vector2(x, y).normalized;
-        rb.velocity = dashDirection * dashSpeed;
-        SpriteRenderer.flipX = !SpriteRenderer.flipX;
-        // Freeze gravity so the dash doesn't sag downwards
-        float originalGravity = rb.gravityScale;
-        rb.gravityScale = 0f;
-        Animator.CrossFade("dash", 0, 0);
-        Color dashCyan = new Color32(20, 209, 255, 255);
-        SpriteRenderer.color = Color.Lerp(Color.white, dashCyan, 0.3f);
-        yield return new WaitForSeconds(dashDuration);
-        SpriteRenderer.color = Color.white;
-        SpriteRenderer.flipX = !SpriteRenderer.flipX;
-        rb.velocity = rb.velocity * 0.2f; 
-
-        rb.gravityScale = originalGravity;
-        isDashing = false;
-
-        yield return new WaitForSeconds(dashCooldown);
     }
 
     private IEnumerator FallThrough()
