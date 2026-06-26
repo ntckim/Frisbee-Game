@@ -9,6 +9,7 @@ public class gameManager : MonoBehaviour
     public static gameManager instance; // Allows other scripts to find this easily
     public TextMeshProUGUI targetText;
     [SerializeField] private int targetCount;
+    private bool frisbeeWon;
 
     private void Awake()
     {
@@ -57,5 +58,57 @@ public class gameManager : MonoBehaviour
         {
             targetText.text = "Targets <br>left: <color=red><size=110%>" + targetCount + "</size></color>";
         }
+    }
+
+    public void FrisbeeCaught()
+    {
+        if (frisbeeWon) return;
+        frisbeeWon = true;
+        StartCoroutine(FrisbeeWinCoroutine());
+    }
+
+    IEnumerator FrisbeeWinCoroutine()
+    {
+        playermovement player = FindObjectOfType<playermovement>();
+        if (player != null) player.DisableMovement();
+
+        ShowWinMessage("You Win!");
+        Debug.Log("You caught the frisbee!");
+
+        float levelTime = countdownTimer.getTime();
+        GameData.levelTimes.Add(levelTime);
+        Time.timeScale = 0f;
+
+        yield return new WaitForSecondsRealtime(2f);
+        Time.timeScale = 1f;
+    }
+
+    void ShowWinMessage(string message)
+    {
+        if (targetText != null)
+        {
+            targetText.text = "<color=green><size=150%>" + message + "</size></color>";
+            return;
+        }
+
+        Canvas canvas = FindObjectOfType<Canvas>();
+        if (canvas == null) return;
+
+        GameObject textObj = new GameObject("WinMessage");
+        textObj.transform.SetParent(canvas.transform, false);
+
+        RectTransform rect = textObj.AddComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = Vector2.zero;
+        rect.sizeDelta = new Vector2(600f, 120f);
+
+        TextMeshProUGUI winText = textObj.AddComponent<TextMeshProUGUI>();
+        TextMeshProUGUI existingText = FindObjectOfType<TextMeshProUGUI>();
+        if (existingText != null) winText.font = existingText.font;
+        winText.text = message;
+        winText.fontSize = 72f;
+        winText.alignment = TextAlignmentOptions.Center;
+        winText.color = Color.green;
     }
 }
