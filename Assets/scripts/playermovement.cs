@@ -20,6 +20,11 @@ public class playermovement : MonoBehaviour
     [Header("Movement")]
         [SerializeField]private float maxRunSpeed = 10f;
         [SerializeField] private float jumpHeight = 10f; 
+    [Header("Frisbee Throw")]
+        [SerializeField] private GameObject frisbeePrefab;
+        [SerializeField] private float throwSpeed = 12f;
+        [SerializeField] private float throwCooldown = 0.5f;
+        private float lastThrowTime;
 
 
     void Start()
@@ -55,6 +60,11 @@ public class playermovement : MonoBehaviour
         jumpButtonDown = Input.GetKeyDown(KeyCode.UpArrow);
         if (jumpButtonDown && OnGround()){
             rb.velocity = new Vector2(rb.velocity.x, jumpHeight);
+        }
+        if (Input.GetKeyDown(KeyCode.W) && Time.time >= lastThrowTime + throwCooldown)
+        {
+            ThrowFrisbee();
+            lastThrowTime = Time.time;
         }
         if (Input.GetKeyDown(KeyCode.DownArrow)){
             rb.velocity = new Vector2(rb.velocity.x, -10);
@@ -107,6 +117,20 @@ public class playermovement : MonoBehaviour
             Animator.CrossFade("jump",0, 0);}
         else if (currentState == AnimationState.idle){
             Animator.CrossFade("idle",0, 0);}
+    }
+
+    private void ThrowFrisbee()
+    {
+        if (frisbeePrefab == null) return;
+
+        Vector2 direction = SpriteRenderer.flipX ? Vector2.left : Vector2.right;
+        Vector3 spawnPos = transform.position + Vector3.up * 0.5f + (Vector3)(direction * 1f);
+        GameObject thrown = Instantiate(frisbeePrefab, spawnPos, Quaternion.identity);
+        thrownFrisbee projectile = thrown.GetComponent<thrownFrisbee>();
+        if (projectile != null)
+        {
+            projectile.Launch(direction, throwSpeed, GetComponent<Collider2D>());
+        }
     }
 
     private IEnumerator FallThrough()
