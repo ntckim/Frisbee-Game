@@ -1,4 +1,4 @@
-##CONTROLS
+### CONTROLS
 
 arrow keys to move
 Spacebar to catch frisbee
