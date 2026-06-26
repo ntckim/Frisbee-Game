@@ -27,14 +27,8 @@ public class playermovement : MonoBehaviour
     [Header("Movement")]
         [SerializeField]private float maxRunSpeed = 10f;
         [SerializeField] private float jumpHeight = 10f; 
-    [Header("Bullet")]
-        [SerializeField] private GameObject bulletPrefab;
-        [SerializeField] private float bulletSpeed;
-    [Header("shooting")]
-        [SerializeField] private float fireRate = 0.25f;       // Cooldown between shots
-        [SerializeField] private float inputBufferTime = 0.05f; // Window for diagonal input
-        private float nextFireTime = 0f;
-        private bool isCheckingInput = false;
+
+
     void Start()
     {
         SpriteRenderer = GetComponent<SpriteRenderer>();
@@ -107,15 +101,6 @@ public class playermovement : MonoBehaviour
         }
         
 
-        //SHOOTING
-        if (Time.time >= nextFireTime){
-            if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.D)){
-                if (!isCheckingInput) 
-                {
-                    StartCoroutine(ProcessShootDirection());
-                }
-            }
-        }
         if (!MenuScript.isPaused){
             UpdateAnimation();
         }
@@ -176,44 +161,7 @@ public class playermovement : MonoBehaviour
 
         yield return new WaitForSeconds(dashCooldown);
     }
-    public void Shoot(Vector3 direction){
-        GameObject newBullet = Instantiate(bulletPrefab, transform.position, Quaternion.identity);//comeback here
-        newBullet.GetComponent<Rigidbody2D>().velocity = direction.normalized*bulletSpeed;
-        Destroy(newBullet, 0.5f);
-    }
-    private IEnumerator ProcessShootDirection() 
-    {
-        isCheckingInput = true;
-        float timer = 0;
 
-        // Wait for a few frames to see if another key is pressed
-        while (timer < inputBufferTime) 
-        {
-            timer += Time.deltaTime;
-            yield return null; 
-        }
-
-        // Now calculate the final direction based on what keys are CURRENTLY held
-        float x = 0;
-        float y = 0;
-
-        if (Input.GetKey(KeyCode.W)) y = 1;
-        else if (Input.GetKey(KeyCode.S)) y = -1;
-
-        if (Input.GetKey(KeyCode.D)) x = 1;
-        else if (Input.GetKey(KeyCode.A)) x = -1;
-
-        Vector3 finalDir = new Vector3(x, y, 0).normalized;
-
-        // Only shoot if we actually have a direction (prevents shooting if keys were released)
-        if (finalDir != Vector3.zero) 
-        {
-            Shoot(finalDir);
-            nextFireTime = Time.time + fireRate; // Set the cooldown
-        }
-
-        isCheckingInput = false;
-    }
     private IEnumerator FallThrough()
     {
         // Find the specific platform collider below us
